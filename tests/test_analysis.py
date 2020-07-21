@@ -39,7 +39,7 @@ def test_analysis_hist():
     assert len(age_analyzer.window_hists) == len(day_list), "Number of histograms should equal number of days"
 
     # checks compute_windows and plot()
-    plots = agehist.plot(windows=True)
+    plots = agehist.plot(windows=True)  # .savefig('DEBUG_age_histograms.png')
     assert len(plots) == len(day_list), "Number of plots generated should equal number of days"
 
 
@@ -47,6 +47,7 @@ def test_analysis_fit():
     sim = cv.Sim(datafile="example_data.csv")
     sim.run()
     fit = sim.compute_fit()
+    print(type(fit))
     # battery of tests to test basic fit function functionality
     # tests that running functions does not produce error
     # try/except blocks will be changed to assertRaises once code is formatted as unittest
@@ -59,16 +60,33 @@ def test_analysis_fit():
     except Exception as E:
         raise ValueError(f"Unable to compute differences: {E}")
     try:
+        fit.compute_gofs()
+    except Exception as E:
+        raise ValueError(f"Unable to compute goodness of fit: {E}")
+    try:
         fit.plot()
     except Exception as E:
         raise ValueError(f"Fit plot not being rendered correctly: {E}")
 
-    # testing custom fit inputs
+    # testing custom fit outputs with new data
+    # expected: added data will change outputs
+    initial_gofs = fit.gofs
+    initial_losses = fit.losses
+    initial_diffs = fit.diffs
     customInputs = {'BoomTown':{'data':np.array([1,2,3]), 'sim':np.array([1,2,4]), 'weights':[2.0, 3.0, 4.0]}}
     try:
         customFit = sim.compute_fit(custom=customInputs)
     except:
         raise ValueError("Fitting the model does not work with custom inputs")
+
+    new_gofs = customFit.gofs
+    new_losses = customFit.losses
+    new_diffs = customFit.diffs
+    assert initial_gofs != new_gofs, f"Goodness of fit remains unchanged after adding new data"
+    assert initial_losses != new_losses, f"Losses between data and fit remain unchanged after adding new data"
+    assert initial_diffs != new_diffs, f"Differences between data and fit remains unchanged after adding new data"
+
+    # testing that customFit is different from 
     # TODO: test the following `customFit.reconcile_inputs()`
     # TODO: test difference between data and sim, ensure loss is
 
