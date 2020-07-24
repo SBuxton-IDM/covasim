@@ -31,7 +31,13 @@ def test_analysis_hist():
 
     # checks to make sure dictionary form has right keys
     agehistDict = sim['analyzers'][0].get()
+    print(agehistDict.keys())
     assert len(agehistDict.keys()) == 5 # TODO: is there a way to know what keys to expect?
+    correctKeys = ['bins', 'exposed', 'dead', 'tested', 'diagnosed']
+
+    # testing that these are the correct keys
+    for key in correctKeys:
+        assert key in agehistDict.keys(), f"The key {key} is not in the histogram dictionary"
 
     # checks to see that compute windows is correct
     agehist = sim['analyzers'][0]
@@ -42,12 +48,27 @@ def test_analysis_hist():
     plots = agehist.plot(windows=True)  # .savefig('DEBUG_age_histograms.png')
     assert len(plots) == len(day_list), "Number of plots generated should equal number of days"
 
+    # check that list of states yields different dict
+    # checks that analyzer can be added to sim after it is run
+    # adding sim in parameters calls both initialize() and apply()
+    age_analyzer2 = cv.age_histogram(states=['exposed', 'dead'], sim=sim, days=['2020-03-01', '2020-04-01', '2020-04-30'])
 
+    print(sim['analyzers'][1])
+
+    correctKeys2 = ['exposed', 'dead']
+
+    for key in correctKeys2:
+        assert key in age_analyzer2.states, f"The key {key} is not in the histogram dictionary"
+    assert len(age_analyzer2.states) == 2
+
+    # Checks that analyzer can access full range of dates ERROR HERE
+    age_analyzer2.compute_windows()
+    assert len(age_analyzer2.window_hists) == len(3), "Number of histograms should equal number of days"
+    
 def test_analysis_fit():
     sim = cv.Sim(datafile="example_data.csv")
     sim.run()
     fit = sim.compute_fit()
-    print(type(fit))
     # battery of tests to test basic fit function functionality
     # tests that running functions does not produce error
 
@@ -58,15 +79,27 @@ def test_analysis_fit():
     initial_losses = fit.losses
     initial_diffs = fit.diffs
     customInputs = {'BoomTown':{'data':np.array([1,2,3]), 'sim':np.array([1,2,4]), 'weights':[2.0, 3.0, 4.0]}}
+    customInputsBad = {'BoomTown':{'data':np.array([1,2,3]), 'sim':np.array([1,2,4]), 'weights':[0, 0, 0]}}
+    initials = [initial_gofs, initial_losses, initial_diffs]
     
     customFit = sim.compute_fit(custom=customInputs)
-
+    customFit2 = sim.compute_fit(customInputsBad)
+    
     new_gofs = customFit.gofs
     new_losses = customFit.losses
     new_diffs = customFit.diffs
     assert initial_gofs != new_gofs, f"Goodness of fit remains unchanged after adding new data"
     assert initial_losses != new_losses, f"Losses between data and fit remain unchanged after adding new data"
     assert initial_diffs != new_diffs, f"Differences between data and fit remains unchanged after adding new data"
+
+    # check that the compute function does the same
+    fit2 = sim.compute_fit()
+    fit2.compute()
+    fit2attrs = [fit2.gofs, fit2.losses, fit2.diffs]
+    # TODO: compare the two lists
+    #assert all([a - b for a, b in zip(fit2attrs, initials)]), f"compute yields different results than when fit features are computed separately"
+
+
 
     # testing that customFit is different from 
     # TODO: test the following `customFit.reconcile_inputs()`
@@ -87,7 +120,7 @@ def test_trans_tree():
 # start_time = time.time()
 
 # test_analysis_snapshot()
-# test_analysis_hist()
+test_analysis_hist()
 # test_analysis_fit()
 # test_trans_tree()
 
