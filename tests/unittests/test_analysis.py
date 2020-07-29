@@ -9,28 +9,42 @@ from unittest_support_classes import CovaSimTest, TestProperties
 
 class AnalysisTest(CovaSimTest):
     def test_analysis_snapshot(self):
-        sim = cv.Sim(analyzers=cv.snapshot('2020-04-04', '2020-04-14'))
+        sim = cv.Sim(analyzers=cv.snapshot('2021-04-04', '2021-04-14'), pop_size=200)
         sim.run()
         snapshot = sim['analyzers'][0]
         people1 = snapshot.snapshots[0]            # Option 1
         people2 = snapshot.snapshots['2020-04-04'] # Option 2
-        people3 = snapshot.get('2020-04-14')       # Option 3
-        people4 = snapshot.get(34)                 # Option 4
+        people3 = snapshot.get('2020-04-04')       # Option 3
+        people4 = snapshot.get(34)                 # Option 4                
         people5 = snapshot.get()                   # Option 5
         # people3 = []  # uncomment to verify error
-        peoples = [people1, people2, people3, people4, people5]
+        peoples = [people2, people3, people4, people5]
         for i, people in enumerate(peoples):
-            optionNum = i+1
-            self.assertGreater(len(people), 0)
-        pass
+            optionNum = i+2
+            assert people1 == people, f"Option {optionNum} is not accessing correct date"
+
+        print("This is the bad part get ready: ")
+        print(snapshot)
+
+        # try:
+
+        # except Exception E:
+        #     print(E)
+        #     pass
+
+        # try:
+        #     peopleBad = snapshot.snapshots['2020-04-13']
+        # except KeyError:
+        #     pass
+        
+        
 
     def test_analysis_hist(self):
         # raising multiple histograms to check windows functionality
         day_list = ["2020-03-30", "2020-03-31", "2020-04-01"]
         age_analyzer = cv.age_histogram(days=day_list)
-        sim = cv.Sim(analyzers=age_analyzer)
+        sim = cv.Sim(analyzers=age_analyzer, pop_size=200)
         sim.run()
-        self.assertEqual(age_analyzer.window_hists, None)
 
         # checks to make sure dictionary form has right keys
         agehistDict = sim['analyzers'][0].get()
@@ -39,8 +53,7 @@ class AnalysisTest(CovaSimTest):
         correctKeys = ['bins', 'exposed', 'dead', 'tested', 'diagnosed']
 
         # testing that these are the correct keys
-        for key in correctKeys:
-            self.assertTrue(key in agehistDict.keys())
+        self.assertEqual(len(agehistDict.keys()), 5)
 
         # checks to see that compute windows is correct
         agehist = sim['analyzers'][0]
@@ -58,12 +71,14 @@ class AnalysisTest(CovaSimTest):
 
         correctKeys2 = ['exposed', 'dead']
 
-        for key in correctKeys2:
-            self.assertTrue(key in age_analyzer2.states) # f"The key {key} is not in the histogram dictionary"
-        self.assertEqual(len(age_analyzer2.states), 2)
+        sim2 = cv.Sim(analyzers=age_analyzer2, pop_size = 200)
+        sim2.run()
+        print(sim['analyzers'][0].get())
+        self.assertEqual(len(sim2['analyzers'][0].get().keys()), 2)
 
         # Checks that analyzer can access full range of dates ERROR HERE, DELETED
         
+
         pass
 
         
@@ -89,24 +104,15 @@ class AnalysisTest(CovaSimTest):
         self.assertEqual(initial, after) # f"Calculating gof in .compute() should yield same result as .compute_gofs()"
         self.assertNotEqual(customFit.mismatch, customFit2.mismatch) #, f"Goodness of fit remains unchanged after changing weights"
 
+        weirdFit = sim.compute_fit(keys = ['new_tests'], custom=customInputs, compute=True)
+        # self.assertNotEqual(weirdFit.gofs, customFit.gofs)
+        # print(weirdFit)
+
+
+
         #TODO: change labels and check results, check plot windows lengths
 
 
-    def test_trans_tree(self):
-        sim = cv.Sim()
-        sim.run()
-        # testing that it catches no graph error
-        tt = sim.make_transtree(to_networkx=False)
-        try:
-            tt.r0()
-        except RuntimeError:
-            pass
 
-        pass
-
-# test_analysis_snapshot()
-# test_analysis_hist()
-# test_analysis_fit()
-# test_trans_tree()
 
 
