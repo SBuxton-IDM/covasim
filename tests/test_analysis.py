@@ -53,8 +53,6 @@ def test_analysis_hist():
     # adding sim in parameters calls both initialize() and apply()
     age_analyzer2 = cv.age_histogram(states=['exposed', 'dead'], sim=sim, days=['2020-03-01', '2020-04-01', '2020-04-30'])
 
-    print(sim['analyzers'][1])
-
     correctKeys2 = ['exposed', 'dead']
 
     for key in correctKeys2:
@@ -63,7 +61,7 @@ def test_analysis_hist():
 
     # Checks that analyzer can access full range of dates ERROR HERE
     age_analyzer2.compute_windows()
-    assert len(age_analyzer2.window_hists) == len(3), "Number of histograms should equal number of days"
+    assert len(age_analyzer2.window_hists) == 3, "Number of histograms should equal number of days"
     
 def test_analysis_fit():
     sim = cv.Sim(datafile="example_data.csv")
