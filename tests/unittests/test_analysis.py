@@ -8,6 +8,8 @@ from unittest_support_classes import CovaSimTest, TestProperties
 # Runtime: 5.004 seconds
 
 class AnalysisTest(CovaSimTest):
+
+
     def test_analysis_snapshot(self):
         sim = cv.Sim(analyzers=cv.snapshot('2020-04-04', '2020-04-14'))
         sim.run()
@@ -27,28 +29,29 @@ class AnalysisTest(CovaSimTest):
     def test_analysis_hist(self):
         # raising multiple histograms to check windows functionality
         day_list = ["2020-03-30", "2020-03-31", "2020-04-01"]
-        age_analyzer = cv.age_histogram(days=day_list)
-        sim = cv.Sim(analyzers=age_analyzer)
-        sim.run()
-        self.assertEqual(age_analyzer.window_hists, None)
+        self.add_age_histogram(days=day_list)
+        # TODO: Make this analyzer with self.add_age_histogram
+        # TODO: Run this sim with self.sim.run() or whatever
+        self.run_sim()
+        hist = self.get_analyzer(0)
+        self.assertEqual(hist.window_hists, None)
 
         # checks to make sure dictionary form has right keys
-        agehistDict = sim['analyzers'][0].get()
-        print(agehistDict.keys())
-        self.assertEqual(len(agehistDict.keys()), 5)
+        if self.is_debugging:
+            print(hist.keys()) # Is this just for debugging?
+        self.assertEqual(len(hist.keys()), 5)
         correctKeys = ['bins', 'exposed', 'dead', 'tested', 'diagnosed']
 
         # testing that these are the correct keys
         for key in correctKeys:
-            self.assertTrue(key in agehistDict.keys())
+            self.assertTrue(key in hist.keys())
 
         # checks to see that compute windows is correct
-        agehist = sim['analyzers'][0]
-        agehist.compute_windows()
-        self.assertEqual(len(age_analyzer.window_hists), len(day_list))
+        hist.compute_windows()
+        self.assertEqual(len(hist.window_hists), len(day_list))
 
         # checks compute_windows and plot()
-        plots = agehist.plot(windows=True)  # .savefig('DEBUG_age_histograms.png')
+        plots = hist.plot(windows=True)  # .savefig('DEBUG_age_histograms.png')
         self.assertEqual(len(plots), len(day_list)) # "Number of plots generated should equal number of days"
 
         # check that list of states yields different dict
@@ -60,7 +63,8 @@ class AnalysisTest(CovaSimTest):
 
         for key in correctKeys2:
             self.assertTrue(key in age_analyzer2.states) # f"The key {key} is not in the histogram dictionary"
-        self.assertEqual(len(age_analyzer2.states), 2)
+        self.assertGreater(len(age_analyzer2.states), len(correctKeys2))
+        self.assertGreater
 
         # Checks that analyzer can access full range of dates ERROR HERE, DELETED
         

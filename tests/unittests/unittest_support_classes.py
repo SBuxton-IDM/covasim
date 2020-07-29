@@ -12,7 +12,10 @@ import json
 import os
 import numpy as np
 
-from covasim import Sim, parameters, change_beta, test_prob, contact_tracing, sequence
+from covasim import Sim, parameters,\
+    change_beta, test_prob, contact_tracing, sequence,\
+    age_histogram
+
 
 
 
@@ -146,8 +149,11 @@ class CovaSimTest(unittest.TestCase):
         self.simulation_parameters = None
         self.simulation_prognoses = None
         self.sim = None
+
         self.simulation_result = None
         self.interventions = None
+        self.analyzers = []
+
         self.expected_result_filename = f"DEBUG_{self.id()}.json"
         if os.path.isfile(self.expected_result_filename):
             os.unlink(self.expected_result_filename)
@@ -241,6 +247,7 @@ class CovaSimTest(unittest.TestCase):
         self.simulation_parameters['interventions'] = self.interventions
 
         self.sim = Sim(pars=self.simulation_parameters,
+                       analyzers=self.analyzers,
                        datafile=None)
         if not self.simulation_prognoses:
             self.simulation_prognoses = parameters.get_prognoses(
@@ -329,6 +336,22 @@ class CovaSimTest(unittest.TestCase):
         my_sequence = sequence(days=day_list,
                                interventions=intervention_list)
         self.interventions = my_sequence
+    # endregion
+
+    # region analyzer support
+    def add_age_histogram(self, days_list=None, states_list=None,
+                          edges_list=None, datafile_name=None):
+        age_analyzer = age_histogram(days=days_list,
+                                     states=states_list,
+                                     edges=edges_list,
+                                     datafile=datafile_name,
+                                     sim=None)
+        self.analyzers.append(age_analyzer)
+        return age_analyzer
+
+    def get_analyzer(self, index=0):
+        return self.sim['analyzers'][index]
+
     # endregion
 
     # region specialized simulation methods
