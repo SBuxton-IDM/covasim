@@ -8,8 +8,8 @@ from unittest_support_classes import CovaSimTest, TestProperties
 # Runtime: 5.004 seconds
 
 class AnalysisTest(CovaSimTest):
-    def test_analysis_snapshot(self):
-        sim = cv.Sim(analyzers=cv.snapshot('2021-04-04', '2021-04-14'), pop_size=200)
+    def test_snapshot(self):
+        sim = cv.Sim(analyzers=cv.snapshot('2020-04-04', '2020-04-14'), pop_size=200)
         sim.run()
         snapshot = sim['analyzers'][0]
         people1 = snapshot.snapshots[0]            # Option 1
@@ -39,7 +39,7 @@ class AnalysisTest(CovaSimTest):
         
         
 
-    def test_analysis_hist(self):
+    def test_hist(self):
         # raising multiple histograms to check windows functionality
         day_list = ["2020-03-30", "2020-03-31", "2020-04-01"]
         age_analyzer = cv.age_histogram(days=day_list)
@@ -82,7 +82,7 @@ class AnalysisTest(CovaSimTest):
         pass
 
         
-    def test_analysis_fit(self):
+    def test_fit(self):
         sim = cv.Sim(datafile="example_data.csv")
         sim.run()
         # battery of tests to test basic fit function functionality
@@ -113,6 +113,16 @@ class AnalysisTest(CovaSimTest):
         #TODO: change labels and check results, check plot windows lengths
 
 
+#%% Run as a script
+if __name__ == '__main__':
 
+    import time
+    start_time = time.time()
 
+    test_analysis_snapshot()
+    test_analysis_hist()
+    test_analysis_fit()
+    test_trans_tree()
+
+    print("--- %s seconds ---" % (time.time() - start_time))
 
